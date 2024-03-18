@@ -1,8 +1,3 @@
 # ninja log v5
-1	53	7316227010933823	CMakeFiles/LibrarySystem.dir/librarysys.c.obj	1ee4a3ca267e1d93
-54	120	7316227011579288	LibrarySystem.exe	8fcc9ca4b1a0fa61
-1	449	7319692202171785	CMakeFiles/LibrarySystem.dir/librarysys.c.obj	1ee4a3ca267e1d93
-2	438	7319699991147577	CMakeFiles/LibrarySystem.dir/librarysys.c.obj	1ee4a3ca267e1d93
-444	512	7319699991875704	LibrarySystem.exe	8fcc9ca4b1a0fa61
 2	441	7319700917375526	CMakeFiles/LibrarySystem.dir/librarysys.c.obj	1ee4a3ca267e1d93
 441	513	7319700918063047	LibrarySystem.exe	8fcc9ca4b1a0fa61

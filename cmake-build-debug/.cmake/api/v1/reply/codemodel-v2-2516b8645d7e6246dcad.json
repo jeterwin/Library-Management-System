@@ -39,7 +39,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "LibrarySystem::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-LibrarySystem-Debug-fa6bd23d81f8b367981b.json",
+					"jsonFile" : "target-LibrarySystem-Debug-8fc57be69e0599f8a966.json",
 					"name" : "LibrarySystem",
 					"projectIndex" : 0
 				}
@@ -49,8 +49,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "C:/Users/Erwin/Desktop/LibrarySystem/cmake-build-debug",
-		"source" : "C:/Users/Erwin/Desktop/LibrarySystem"
+		"build" : "C:/Users/Erwin/Desktop/Library-Management-System/cmake-build-debug",
+		"source" : "C:/Users/Erwin/Desktop/Library-Management-System"
 	},
 	"version" : 
 	{

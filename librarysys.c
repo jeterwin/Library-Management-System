@@ -6,14 +6,13 @@
 #include "studentStruct.h"
 #include "loansStruct.h"
 #include "fileHandler.h"
+#include "displayHandler.h"
 
 //Display functions
 void login();
 void openBookManagementPage();
 void openUserManagementPage();
 void resetScreen();
-void endScreen();
-void pressAnyKey();
 void mainScreen();
 
 //Book functions
@@ -47,7 +46,7 @@ char fLoansName[] = "borrows.txt";
 char fTempName[] = "temporary.txt";
 
 char bookWritingPattern[] = "%s, %s, %d\n"; // Name, name, number
-char bookReadingPattern[] = "%[^,], %[^,], %d\n"; // ~ Name Name, Name Name, number
+char bookReadingPattern[] = "%[^,], %[^,], %d\n"; // ~ ,mkName Name, Name Name, number
 
 char userWritingPattern[] = "%s %s\n"; //Name Name
 char userReadingPattern[] = "%[^ ] %[^\n]\n"; // ~ Name Name
@@ -70,22 +69,16 @@ int main()
 void login()
 {
     resetScreen();
-
-    printf("---------------------\n");
-    printf("- Enter Credentials -\n");
-    printf("---------------------\n");
-    printf("Enter your surname and firstname under the following form:"
-           "\n'login [FIRSTNAME] [SURNAME]'\nHit ENTER to confirm. \n");
+    welcomeUser();
 
     char studentName[50], wordSeparator[] = " ";
-    char *words[10];
+    char * words[3];
     int i = 0;
 
     gets(studentName);
     if(strcmp(studentName, "") == 0)
     {
-        printf("Invalid format!\n");
-        Sleep(1000);
+        errorMessage("Invalid format!");
         login();
     }
 
@@ -111,11 +104,12 @@ void login()
     }
 
     int foundUser = 0;
-    char fname[50], lname[50];
-    while(fscanf(fUsers, userReadingPattern, fname, lname) != EOF)
+    char firstName[50], lastName[50];
+    while(fscanf(fUsers, userReadingPattern, firstName, lastName) != EOF)
     {
         numberOfStudents++;
-        if(strcmp(studentName, strcat(fname, lname)) == 0)
+        //We are comparing our student name with the first name and last name concatenated from the file
+        if(strcmp(studentName, strcat(firstName, lastName)) == 0)
         {
             foundUser = 1;
         }
@@ -129,14 +123,13 @@ void login()
         updateBookList();
         updateLoans();
 
-        printf("\nSuccessfully logged in!\n");
+        displayLoggedIn();
         Sleep(2000);
         mainScreen();
     }
     else
     {
-        printf("There has no user with the name '%s' found in the database, try again.", currentlyAuthStudentName);
-        free(currentlyAuthStudentName);
+        noUserFound(currentlyAuthStudentName);
 
         pressAnyKey();
         login();
@@ -148,6 +141,8 @@ void copyCurrentAuthStudent(char *words[3])
     //We assign the last position + 1 of our first name the null terminator then change
     //the value of the last position to an empty space, allowing us to concatenate the
     //last name on top of the first name
+    free(currentlyAuthStudentName);
+
     currentlyAuthStudentName = malloc(sizeof(words[1]) + sizeof(words[2]) + 1);
     strcpy(currentlyAuthStudentName, words[1]);
     currentlyAuthStudentName[strlen(currentlyAuthStudentName) + 1] = '\0';
@@ -157,6 +152,7 @@ void copyCurrentAuthStudent(char *words[3])
 
 void updateBookList()
 {
+    free(books);
     numberOfBooks = 0;
 
     FILE * fBooks = openFile(fBooksName, "r");
@@ -172,7 +168,7 @@ void updateBookList()
     books = malloc(numberOfBooks * sizeof(struct Book));
 
     fBooks = openFile(fBooksName, "r");
-    fflush(fBooks);
+
     int i = 0;
     while(fscanf(fBooks, bookReadingPattern, _bookName, _authorName, &quantity) != EOF)
     {
@@ -187,6 +183,7 @@ void updateBookList()
 
 void updateLoans()
 {
+    free(loans);
     numberOfLoans = 0;
 
     FILE * fLoans = openFile(fLoansName, "r");
@@ -217,6 +214,8 @@ void updateLoans()
 
 void updateStudentList()
 {
+    free(students);
+
     numberOfStudents = 0;
     char _firstName[50], _lastName[50];
     FILE *fUsers = openFile(fUsersName, "r");
@@ -255,7 +254,7 @@ void registerStudent(FILE * fUsers)
 
     if(strcmp(firstName, "") == 0 || strcmp(lastName, "") == 0)
     {
-        printf("You did not provide a first or a last name!\n");
+        errorMessage("You did not provide a first or a last name!");
         Sleep(2000);
         registerStudent(fUsers);
     }
@@ -281,8 +280,7 @@ void verifyArguments(char *words[], int length)
     //and if the length of our arguments are 3, respecting the "login [FNAME] [LNAME]" pattern.
     if(strcmp(words[0], "login") != 0 || length != 3)
     {
-        printf("\nInvalid format!\n");
-        Sleep(1000);
+        errorMessage("Invalid format!");
         login();
     }
 }
@@ -291,14 +289,7 @@ void mainScreen()
 {
     resetScreen();
 
-    printf("--------------------------\n");
-    printf("--      Welcome to      --\n");
-    printf("--  The Library System! --\n");
-    printf("--------------------------\n\n");
-    printf("Type the index of the system that you want to access, then press ENTER!\n");
-    printf("> 1. User Management Page\n");
-    printf("> 2. Library Management Page\n");
-    printf("> 3. Quit App\n");
+    displayMainPage();
 
     int choice = 0;
     scanf("%d", &choice);
@@ -317,8 +308,7 @@ void mainScreen()
             endScreen();
             break;
         default:
-            printf("You must input a number between 1-3!\n");
-            Sleep(2000);
+            errorMessage("You must input a number between 1-3 !");
             mainScreen();
     }
 }
@@ -337,8 +327,7 @@ void addUser()
 
     if(checkValidity(firstName, lastName) == 1)
     {
-        printf("You must enter a first name and a last name!\n");
-        Sleep(3000);
+        errorMessage("You must enter a first name and a last name!");
         mainScreen();
     }
     //Check for duplicates
@@ -347,8 +336,7 @@ void addUser()
         //We found a duplicate
         if(strcmp(firstName, students[i].firstName) == 0 && strcmp(lastName, students[i].lastName) == 0)
         {
-            printf("\nThere already exists an user with the same name!\n");
-            Sleep(3000);
+            errorMessage("There already exists an user with the same name!");
             foundDuplicate = 1;
             break;
         }
@@ -472,7 +460,7 @@ void bookSearch()
     }
     else
     {
-        printf("You should at least provide a book name or an author name!\n");
+        errorMessage("You should at least provide a book name or an author name!");
     }
     fclose(fBooks);
 
@@ -497,12 +485,12 @@ void showLoanedBooks()
         if(found == 0 && booksBorrowed == 0)
         {
             printf("These are all the books you have loaned so far!\n\n");
-            printf("Book Name: %s\nAuthor Name: %s\n", _bookName, _authorName);
+            printf("Book Name: %s\nAuthor Name: %s\n\n", _bookName, _authorName);
             booksBorrowed++;
         }
         else if(found == 0)
         {
-            printf("Book Name: %s\nAuthor Name: %s\n", _bookName, _authorName);
+            printf("Book Name: %s\nAuthor Name: %s\n\n", _bookName, _authorName);
             booksBorrowed++;
         }
     }
@@ -532,8 +520,7 @@ void donateBook()
 
     if(checkValidity(bookName, authorName) == 1)
     {
-        printf("Not a valid book name!");
-        Sleep(2000);
+        errorMessage("Not a valid book name!");
         openBookManagementPage();
     }
 
@@ -571,7 +558,7 @@ void donateBook()
 
     updateBookList();
 
-    printf("\nSuccessfully added %s to the library's database!\n", bookName);
+    printf("\nSuccessfully added '%s' to the library's database!\n", bookName);
     printf("Would you like to add another book? [Y/N]\n");
 
     fflush(stdin);
@@ -629,7 +616,7 @@ void borrowBook()
     }
     else
     {
-        printf("You should at least provide a book name or an author name!\n");
+        errorMessage("You should at least provide a book name or an author name!");
     }
 
     pressAnyKey();
@@ -658,8 +645,7 @@ void searchBookByNameAndAuthor(char bookName[50], char authorName[50])
             }
             else
             {
-                printf("The book is in stock, there are %d available left, you have"
-                       " successfully loaned the book!", bookStock);
+                printf("You have successfully loaned the book!");
 
                 Sleep(2000);
 
@@ -739,8 +725,7 @@ void searchBookByName(char bookName[50])
                 }
                 else
                 {
-                    printf("The book is in stock, there are %d available left, you have"
-                           " successfully loaned the book!", bookStock);
+                    printf("You have successfully loaned the book!");
 
                     Sleep(3000);
 
@@ -767,21 +752,10 @@ void searchBookByName(char bookName[50])
     openBookManagementPage();
 }
 
-void pressAnyKey()
-{
-    fflush(stdin);
-
-    printf("\nPress any key to continue.\n");
-    char ch;
-    scanf("%c", &ch);
-}
-
 //We will update our entry inside the books file and decrease the available quantity by 1
 void removeBookQuantity()
 {
     fflush(stdin);
-
-    FILE * fTemp = openFile(fTempName, "r+");
 
     int found = 1;
 
@@ -789,27 +763,20 @@ void removeBookQuantity()
     {
         found = strcmp(books[i].bookName, wishedBook) != 0 && strcmp(books[i].authorName, bookAuthor) != 0;
 
-        if(found != 0)
+        if(found == 0)
         {
-            fprintf(fTemp, "%s, %s, %d\n",
-                    books[i].bookName, books[i].authorName, books[i].copiesAvailable);
+            books[i].copiesAvailable -= 1;
+            break;
         }
-        else
-        {
-            bookStock--;
-            fprintf(fTemp, bookWritingPattern,
-                    books[i].bookName, books[i].authorName, bookStock);
-        }
+
     }
 
-    fclose(fTemp);
     //We need to open our original books file in write mode in order to clear the file from its content
     FILE * fBooks = openFile(fBooksName, "w");
     fclose(fBooks);
 
-    //We open our original file in append mode and copy everything from our temp file
+    //We open our original file in append mode and copy everything from our book structs
     fBooks = openFile(fBooksName, "a");
-    fTemp = openFile(fTempName, "r");
 
     for(int i = 0; i < numberOfBooks; i++)
     {
@@ -818,12 +785,7 @@ void removeBookQuantity()
     }
 
     fclose(fBooks);
-    fclose(fTemp);
 
-    //We open the temp file in write mode to clear it of its content so its prepared for its next book
-    fTemp = openFile(fTempName, "w");
-    fclose(fTemp);
-    //We free the memory allocated to the concatenated book name pointer
 
     printf("\nWould you want to loan another book? [Y/N]\n");
     char choice;
@@ -851,11 +813,7 @@ void openUserManagementPage()
 {
     resetScreen();
 
-    printf("-------------------\n");
-    printf("- User Management -\n");
-    printf("-------------------\n\n");
-    printf("> 1. Add User\n");
-    printf("> 2. Return to main menu\n");
+    displayUserManagementPage();
 
     int choice;
     scanf("%d", &choice);
@@ -871,8 +829,7 @@ void openUserManagementPage()
             mainScreen();
             break;
         default:
-            printf("You must introduce a number between 1-2!\n");
-            Sleep(2000);
+            errorMessage("You must introduce a number between 1-2 !");
             openUserManagementPage();
     }
 }
@@ -881,15 +838,7 @@ void openBookManagementPage()
 {
     resetScreen();
 
-    printf("-------------------\n");
-    printf("- Book Management -\n");
-    printf("-------------------\n\n");
-    printf("> 1. Borrow a Book\n");
-    printf("> 2. Donate a Book\n");
-    printf("> 3. Return a Book\n");
-    printf("> 4. Show Borrowed Books\n");
-    printf("> 5. Search For a Book\n");
-    printf("> 6. Return to the Main Menu\n");
+    displayBookManagementPage();
 
     int choice;
     scanf("%d", &choice);
@@ -915,8 +864,7 @@ void openBookManagementPage()
             mainScreen();
             break;
         default:
-            printf("You must introduce a number between 1-6!\n");
-            Sleep(2000);
+            errorMessage("You must introduce a number between 1-6 !");
             openUserManagementPage();
     }
 }
@@ -932,6 +880,7 @@ void returnBook()
     printf("Enter the book's author:\n");
     gets(authorName);
 
+    //We suppose we didn't find any matches so we initialize them with 1 (strcmp returns 0 on match)
     int foundUser = 1, foundBook = 1, foundAuthor = 1, returnedBook = 0;
 
     for(int i = 0; i < numberOfLoans; i++)
@@ -990,11 +939,3 @@ void returnBook()
         openBookManagementPage();
     }
 }
-
-void endScreen()
-{
-    printf("Bye bye.");
-    Sleep(1000);
-    exit(0);
-}
-

@@ -8,4 +8,6 @@ add_executable(LibrarySystem
         bookStruct.h
         studentStruct.h
         loansStruct.h
+        displayHandler.h
+        displayHandler.h
 )

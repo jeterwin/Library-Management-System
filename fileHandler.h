@@ -8,6 +8,7 @@ FILE * openFile(char fileName[10], char mode[5])
     FILE * file = fopen(fileName, mode);
     if(file == NULL)
     {
+        //If the file does not exist open it in append mode in order to create it at run-time
         file = fopen(fileName, "a");
         openFile(fileName, mode);
     }
