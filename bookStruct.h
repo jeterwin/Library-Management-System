@@ -3,5 +3,3 @@ struct Book {
     char authorName[50];
     int copiesAvailable;
 };
-
-struct Book book;

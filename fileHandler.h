@@ -1,30 +1,21 @@
 #ifndef LIBRARYSYSTEM_FILEHANDLER_H
 #define LIBRARYSYSTEM_FILEHANDLER_H
 
+#include <stdio.h>
+
 FILE * openFile(char[], char []);
 
-FILE * openFile(char fileName[10], char mode[5])
-{
-    FILE * file = fopen(fileName, mode);
-    if(file == NULL)
-    {
-        //If the file does not exist open it in append mode in order to create it at run-time
-        file = fopen(fileName, "a");
-        openFile(fileName, mode);
-    }
-    return file;
-}
+int checkEmptyFile(FILE * file);
 
-int checkEmptyFile(FILE *);
+void registerStudent(FILE * fUsers, char userWritingPattern[]);
 
-int checkEmptyFile(FILE * file)
-{
-    fseek(file, 0, SEEK_END); // goto end of file
-    if (ftell(file) == 0)
-    {
-        return 1;
-    }
-    fseek(file, 0, SEEK_SET); // goto begin of file
-    return 0;
-}
+int checkValidity(char str1[], char str2[]);
+
+int addUser(char fUsersName[], char userWritingPattern[], int numberOfStudents, struct Student * students);
+
+int findStudent(FILE * fUsers, char userReadingPattern[], char firstName[], char lastName[],
+                char studentName[]);
+
+int verifyArguments(char *words[], int length);
+
 #endif //LIBRARYSYSTEM_FILEHANDLER_H
