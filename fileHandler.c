@@ -41,31 +41,6 @@ int checkEmptyFile(FILE * file)
     return 0;
 }
 
-void registerStudent(FILE * fUsers, char userWritingPattern[])
-{
-    char firstName[50], lastName[50];
-
-    printf("Looks like the library's database is empty.\n");
-    printf("Enter your first name below:\n");
-    gets(firstName);
-
-    printf("Enter your last name below:\n");
-    gets(lastName);
-
-    if(strcmp(firstName, "") == 0 || strcmp(lastName, "") == 0)
-    {
-    errorMessage("You did not provide a first or a last name!");
-    Sleep(2000);
-    registerStudent(fUsers, userWritingPattern);
-    }
-
-    fseek(fUsers, 0, SEEK_SET);
-    fprintf(fUsers, userWritingPattern, firstName, lastName);
-    fclose(fUsers);
-
-    printf("Successfully added in database!\nWelcome %s %s!\n", firstName, lastName);
-}
-
 int verifyArguments(char *words[], int length)
 {
     //We check to see if the first argument of our login string is "login"
@@ -75,7 +50,6 @@ int verifyArguments(char *words[], int length)
         errorMessage("Invalid format!");
         return 0;
     }
-
     return 1;
 }
 

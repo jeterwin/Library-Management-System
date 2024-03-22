@@ -28,8 +28,10 @@ void updateLoans();
 
 //User functions
 void updateStudentList();
-void copyCurrentAuthStudent(char *[]);
+void copyCurrentAuthStudent(char *, char *);
 
+void registerStudent(FILE *);
+void writeBooksToFile();
 
 char *currentlyAuthStudentName;
 int isLoggedIn = 0; // A bool for the current status of the student
@@ -66,7 +68,7 @@ void login()
 
     char studentName[50], wordSeparator[] = " ";
     char * words[3];
-    int currentWord = 0;
+    int currentWordCount = 0;
 
     gets(studentName);
     if(strcmp(studentName, "") == 0)
@@ -76,15 +78,20 @@ void login()
     }
 
     //We break down our input arguments
-    words[currentWord] = strtok(studentName, wordSeparator);
-    while(words[currentWord] != NULL)
+    words[currentWordCount] = strtok(studentName, wordSeparator);
+    while(words[currentWordCount] != NULL)
     {
-        words[++currentWord] = strtok(NULL, wordSeparator);
+        words[++currentWordCount] = strtok(NULL, wordSeparator);
     }
 
-    verifyArguments(words, currentWord);
+    //We didn't input a string under the form of "login [FNAME] [LNAME]"
+    if(!verifyArguments(words, currentWordCount))
+    {
+        login();
+        return;
+    }
 
-    copyCurrentAuthStudent(words);
+    copyCurrentAuthStudent(words[1], words[2]);
 
     strcpy(studentName, strcat(words[1], words[2]));
 
@@ -92,7 +99,11 @@ void login()
     //The file is empty
     if(checkEmptyFile(fUsers) == 1)
     {
-        registerStudent(fUsers, userWritingPattern);
+        registerStudent(fUsers);
+
+        char _firstName[50], _lastName[50];
+        FILE * fStudents = openFile(fUsersName, "r");
+
 
         updateStudentList();
         updateLoans();
@@ -127,18 +138,46 @@ void login()
     }
 }
 
-void copyCurrentAuthStudent(char *words[3])
+void registerStudent(FILE * fUsers)
+{
+    char firstName[50], lastName[50];
+
+    fflush(fUsers);
+    printf("Looks like the library's database is empty.\n");
+    printf("Enter your first name below:\n");
+    gets(firstName);
+
+    printf("Enter your last name below:\n");
+    gets(lastName);
+
+    if(strcmp(firstName, "") == 0 || strcmp(lastName, "") == 0)
+    {
+        errorMessage("You did not provide a first or a last name!");
+        Sleep(2000);
+        registerStudent(fUsers);
+    }
+
+    fseek(fUsers, 0, SEEK_SET);
+    fprintf(fUsers, userWritingPattern, firstName, lastName);
+    fclose(fUsers);
+
+    copyCurrentAuthStudent(firstName, lastName);
+
+    printf("Successfully added in database!\nWelcome %s %s!\n", firstName, lastName);
+}
+
+void copyCurrentAuthStudent(char *firstName, char *lastName)
 {
     //We assign the last position + 1 of our first name the null terminator then change
     //the value of the last position to an empty space, allowing us to concatenate the
     //last name on top of the first name
     free(currentlyAuthStudentName);
 
-    currentlyAuthStudentName = malloc(sizeof(words[1]) + sizeof(words[2]) + 1);
-    strcpy(currentlyAuthStudentName, words[1]);
+    currentlyAuthStudentName = malloc(sizeof(firstName) + sizeof(lastName) + 1);
+    strcpy(currentlyAuthStudentName, firstName);
     currentlyAuthStudentName[strlen(currentlyAuthStudentName) + 1] = '\0';
     currentlyAuthStudentName[strlen(currentlyAuthStudentName)] = ' ';
-    strcat(currentlyAuthStudentName, words[2]);
+    strcat(currentlyAuthStudentName, lastName);
 }
 
 void updateBookList()
@@ -534,7 +573,7 @@ void searchBookByNameAndAuthor(char bookName[50], char authorName[50])
             strcpy(wishedBook, books[i].bookName);
             strcpy(bookAuthor, books[i].authorName);
             bookStock = books[i].copiesAvailable;
-            if(bookStock == 0)
+            if(bookStock <= 0)
             {
                 printf("The book is out of stock, try searching for another one.\n");
             }
@@ -585,7 +624,7 @@ void searchBookByName(char bookName[50])
             scanf("%c", &ch);
             if(ch == 'y' || ch == 'Y')
             {
-                if(bookStock == 0)
+                if(bookStock <= 0)
                 {
                     printf("The book is currently out of stock, try searching for another one.\n");
 
@@ -645,15 +684,7 @@ void removeBookQuantity()
     fclose(fBooks);
 
     //We open our original file in append mode and copy everything from our book structs
-    fBooks = openFile(fBooksName, "a");
-
-    for(int i = 0; i < numberOfBooks; i++)
-    {
-        fprintf(fBooks, bookWritingPattern,
-                books[i].bookName, books[i].authorName, books[i].copiesAvailable);
-    }
-
-    fclose(fBooks);
+    writeBooksToFile();
 
 
     printf("\nWould you want to loan another book? [Y/N]\n");
@@ -667,6 +698,19 @@ void removeBookQuantity()
     {
         openBookManagementPage();
     }
+}
+
+void writeBooksToFile()
+{
+    FILE * fBooks = openFile(fBooksName, "a");
+
+    for(int i = 0; i < numberOfBooks; i++)
+    {
+        fprintf(fBooks, bookWritingPattern,
+                books[i].bookName, books[i].authorName, books[i].copiesAvailable);
+    }
+
+    fclose(fBooks);
 }
 
 //We are inserting a new entry in our text with loans for every book that is borrowed by each student
