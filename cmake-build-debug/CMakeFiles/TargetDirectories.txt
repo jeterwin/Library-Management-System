@@ -1,3 +1,0 @@
-C:/Users/Erwin/Desktop/Library-Management-System/cmake-build-debug/CMakeFiles/LibrarySystem.dir
-C:/Users/Erwin/Desktop/Library-Management-System/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/Erwin/Desktop/Library-Management-System/cmake-build-debug/CMakeFiles/rebuild_cache.dir
