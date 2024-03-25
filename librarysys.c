@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <synchapi.h>
 
-#include "loansStruct.h"
 #include "fileHandler.c"
+#include "utilityClass.c"
+#include "displayHandler.c"
 
 //Display functions
 void login();
@@ -18,8 +19,6 @@ void borrowBook();
 void donateBook();
 void showLoanedBooks();
 void bookSearch();
-void addNewLoanEntry();
-void removeBookQuantity();
 void returnBook();
 void searchBookByName(char [50]);
 void searchBookByNameAndAuthor(char [50], char [50]);
@@ -30,31 +29,19 @@ void updateLoans();
 void updateStudentList();
 void copyCurrentAuthStudent(char *, char *);
 
-void registerStudent(FILE *);
-void writeBooksToFile();
+void registerStudent();
 
-char *currentlyAuthStudentName;
-int isLoggedIn = 0; // A bool for the current status of the student
+static char *currentlyAuthStudentName; // A char to hold the logged in student name
+static int isLoggedIn = 0; // A bool for the current status of the student
 
-char fUsersName[] = "users.txt"; // The name of the file which holds the users
-char fBooksName[] = "books.txt";
-char fLoansName[] = "borrows.txt";
+//Structs for better management
+static struct Student * students;
+static struct Loans * loans;
+static struct Book * books;
 
-char bookWritingPattern[] = "%s, %s, %d\n"; // Name, name, number
-char bookReadingPattern[] = "%[^,], %[^,], %d\n"; // ~ ,mkName Name, Name Name, number
-
-char userWritingPattern[] = "%s %s\n"; //Name Name
-char userReadingPattern[] = "%[^ ] %[^\n]\n"; // ~ Name Name
-
-char loansWritingPattern[] = "%s, %s, %s\n";
-char loansReadingPattern[] = "%[^,], %[^,], %[^\n]\n"; // ~ Name Name, Name Name, Name Name
-
-struct Student * students;
-struct Loans * loans;
-struct Book * books;
-
-char wishedBook[50], bookAuthor[50];
-int bookStock = 0, numberOfStudents = 0, numberOfBooks = 0, numberOfLoans = 0;
+//Variables to store the wished book and author name for faster searching
+static char wishedBook[50], wishedAuthor[50];
+static int bookStock = 0, numberOfStudents = 0, numberOfBooks = 0, numberOfLoans = 0;
 
 int main()
 {
@@ -94,16 +81,10 @@ void login()
     copyCurrentAuthStudent(words[1], words[2]);
 
     strcpy(studentName, strcat(words[1], words[2]));
-
-    FILE *fUsers = openFile(fUsersName, "r+");
     //The file is empty
-    if(checkEmptyFile(fUsers) == 1)
+    if(checkEmptyFile() == 1)
     {
-        registerStudent(fUsers);
-
-        char _firstName[50], _lastName[50];
-        FILE * fStudents = openFile(fUsersName, "r");
-
+        registerStudent();
 
         updateStudentList();
         updateLoans();
@@ -116,8 +97,7 @@ void login()
     }
 
     char firstName[50], lastName[50];
-    isLoggedIn = findStudent(fUsers, userReadingPattern, firstName, lastName, studentName);
-    fclose(fUsers);
+    isLoggedIn = findStudent(firstName, lastName, studentName);
 
     if(isLoggedIn)
     {
@@ -138,8 +118,9 @@ void login()
     }
 }
 
-void registerStudent(FILE * fUsers)
+void registerStudent()
 {
+    FILE * fUsers = openFile(fUsersName, "a+");
     char firstName[50], lastName[50];
 
     fflush(fUsers);
@@ -150,16 +131,16 @@ void registerStudent(FILE * fUsers)
     printf("Enter your last name below:\n");
     gets(lastName);
 
-    if(strcmp(firstName, "") == 0 || strcmp(lastName, "") == 0)
+    //Invalid input found
+    if(checkValidity(firstName, lastName) == 1)
     {
         errorMessage("You did not provide a first or a last name!");
         Sleep(2000);
-        registerStudent(fUsers);
+        registerStudent();
     }
 
-    fseek(fUsers, 0, SEEK_SET);
-    fprintf(fUsers, userWritingPattern, firstName, lastName);
-    fclose(fUsers);
+    //Set the file back at the start of a line (we moved the position)
+    writeStudentToFile(firstName, lastName);
 
     copyCurrentAuthStudent(firstName, lastName);
 
@@ -571,7 +552,7 @@ void searchBookByNameAndAuthor(char bookName[50], char authorName[50])
         {
             foundBooks++;
             strcpy(wishedBook, books[i].bookName);
-            strcpy(bookAuthor, books[i].authorName);
+            strcpy(wishedAuthor, books[i].authorName);
             bookStock = books[i].copiesAvailable;
             if(bookStock <= 0)
             {
@@ -583,14 +564,22 @@ void searchBookByNameAndAuthor(char bookName[50], char authorName[50])
 
                 Sleep(2000);
 
-                addNewLoanEntry();
+                addNewLoanEntry(currentlyAuthStudentName, wishedBook, wishedAuthor);
 
-                removeBookQuantity();
+                //There was an error or we don't want to borrow another book
+                if(removeBookQuantity(books, numberOfBooks, wishedBook, wishedAuthor) == 0)
+                {
+                    openBookManagementPage();
+                }
+                else
+                {
+                    borrowBook();
+                }
             }
             break;
         }
     }
-    //We didn't find any books
+    //We didn't find any books written with the specified arguments
     if(foundBooks == 0)
     {
         printf("There are no books named '%s' written by '%s' available in the library.\n",
@@ -611,9 +600,17 @@ void searchBookByName(char bookName[50])
 
         if(found == 0)
         {
+            if(bookStock <= 0)
+            {
+                printf("The book is currently out of stock, try searching for another one.\n");
+
+                pressAnyKey();
+                openBookManagementPage();
+            }
+
             foundBooks++;
             strcpy(wishedBook, books[i].bookName);
-            strcpy(bookAuthor, books[i].authorName);
+            strcpy(wishedAuthor, books[i].authorName);
             bookStock = books[i].copiesAvailable;
 
             printf("There is a book named '%s' written by '%s' available.\n",
@@ -624,29 +621,17 @@ void searchBookByName(char bookName[50])
             scanf("%c", &ch);
             if(ch == 'y' || ch == 'Y')
             {
-                if(bookStock <= 0)
-                {
-                    printf("The book is currently out of stock, try searching for another one.\n");
+                printf("You have successfully loaned the book!");
 
-                    pressAnyKey();
-                    openBookManagementPage();
-                }
-                else
-                {
-                    printf("You have successfully loaned the book!");
+                Sleep(3000);
 
-                    Sleep(3000);
+                addNewLoanEntry(currentlyAuthStudentName, wishedBook, wishedAuthor);
 
-                    addNewLoanEntry();
-
-                    removeBookQuantity();
-                }
-                break;
+                removeBookQuantity(books, numberOfBooks, wishedBook, wishedAuthor);
             }
             else
             {
                 printf("\nPlease mention the author of the book as well.\n");
-                break;
             }
         }
     }
@@ -660,67 +645,6 @@ void searchBookByName(char bookName[50])
     openBookManagementPage();
 }
 
-//We will update our entry inside the books file and decrease the available quantity by 1
-void removeBookQuantity()
-{
-    fflush(stdin);
-
-    int found = 1;
-
-    for(int i = 0; i < numberOfBooks; i++)
-    {
-        found = strcmp(books[i].bookName, wishedBook) != 0 && strcmp(books[i].authorName, bookAuthor) != 0;
-
-        if(found == 0)
-        {
-            books[i].copiesAvailable -= 1;
-            break;
-        }
-
-    }
-
-    //We need to open our original books file in write mode in order to clear the file from its content
-    FILE * fBooks = openFile(fBooksName, "w");
-    fclose(fBooks);
-
-    //We open our original file in append mode and copy everything from our book structs
-    writeBooksToFile();
-
-
-    printf("\nWould you want to loan another book? [Y/N]\n");
-    char choice;
-    scanf("%c", &choice);
-    if(choice == 'y' || choice == 'Y')
-    {
-        borrowBook();
-    }
-    else
-    {
-        openBookManagementPage();
-    }
-}
-
-void writeBooksToFile()
-{
-    FILE * fBooks = openFile(fBooksName, "a");
-
-    for(int i = 0; i < numberOfBooks; i++)
-    {
-        fprintf(fBooks, bookWritingPattern,
-                books[i].bookName, books[i].authorName, books[i].copiesAvailable);
-    }
-
-    fclose(fBooks);
-}
-
-//We are inserting a new entry in our text with loans for every book that is borrowed by each student
-void addNewLoanEntry()
-{
-    FILE * fLoans = openFile(fLoansName, "a+");
-
-    fprintf(fLoans, loansWritingPattern, currentlyAuthStudentName, wishedBook, bookAuthor);
-    fclose(fLoans);
-}
 
 void openUserManagementPage()
 {
@@ -738,8 +662,8 @@ void openUserManagementPage()
         case 1:
             resetScreen();
 
-            int result = addUser(fUsersName, userWritingPattern, numberOfStudents, students);
-
+            int result = addUser(numberOfStudents, students);
+            //We didn't add an user successfully
             if(result == -1)
             {
                 mainScreen();

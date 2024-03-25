@@ -1,9 +1,6 @@
 #include <synchapi.h>
 #include <stdio.h>
 
-#include "displayHandler.h"
-#include "studentStruct.h"
-
 void welcomeUser()
 {
     printf("---------------------\n");
@@ -28,30 +25,6 @@ void displayMainPage()
 void noUserFoundMessage(char * studentName)
 {
     printf("There is no user with the name '%s' found in the database, try again.", studentName);
-}
-
-
-void displayAllBooksByAuthor(char authorName[], struct Book * books, int numberOfBooks)
-{
-    printf("These are all the books available written by '%s' available in the library:\n\n", authorName);
-
-    int foundBooks = 0;
-
-    for(int i = 0; i < numberOfBooks; i++)
-    {
-        int found = strcmp(authorName, books[i].authorName);
-
-        if(found == 0)
-        {
-            foundBooks++;
-            printf("Book Name: %s\n", books[i].bookName);
-        }
-    }
-
-    if(foundBooks != 0)
-    {
-        printf("\nWrite down the book you're interested in and try searching it again!\n");
-    }
 }
 
 void pressAnyKey()

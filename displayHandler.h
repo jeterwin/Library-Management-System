@@ -1,15 +1,11 @@
 #ifndef LIBRARYSYSTEM_DISPLAYHANDLER_H
 #define LIBRARYSYSTEM_DISPLAYHANDLER_H
 
-#include "bookStruct.h"
-
 void welcomeUser();
 
 void displayMainPage();
 
 void noUserFoundMessage(char * studentName);
-
-void displayAllBooksByAuthor(char authorName[], struct Book * books, int numberOfBooks);
 
 void pressAnyKey();
 
