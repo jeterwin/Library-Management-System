@@ -31,6 +31,8 @@ void copyCurrentAuthStudent(char *, char *);
 
 void registerStudent();
 
+void findReturnedBook();
+
 static char *currentlyAuthStudentName; // A char to hold the logged in student name
 static int isLoggedIn = 0; // A bool for the current status of the student
 
@@ -62,6 +64,7 @@ void login()
     {
         errorMessage("Invalid format!");
         login();
+        return;
     }
 
     //We break down our input arguments
@@ -137,6 +140,7 @@ void registerStudent()
         errorMessage("You did not provide a first or a last name!");
         Sleep(2000);
         registerStudent();
+        return;
     }
 
     //Set the file back at the start of a line (we moved the position)
@@ -551,21 +555,24 @@ void searchBookByNameAndAuthor(char bookName[50], char authorName[50])
         if(foundBookName == 0 && foundAuthorName == 0)
         {
             foundBooks++;
-            strcpy(wishedBook, books[i].bookName);
-            strcpy(wishedAuthor, books[i].authorName);
-            bookStock = books[i].copiesAvailable;
-            if(bookStock <= 0)
+
+            if(books[i].copiesAvailable <= 0)
             {
                 printf("The book is out of stock, try searching for another one.\n");
             }
             else
             {
+                strcpy(wishedBook, bookName);
+                strcpy(wishedAuthor, authorName);
+                bookStock = books[i].copiesAvailable;
+
                 printf("You have successfully loaned the book!");
 
                 Sleep(2000);
 
                 addNewLoanEntry(currentlyAuthStudentName, wishedBook, wishedAuthor);
 
+                updateLoans();
                 //There was an error or we don't want to borrow another book
                 if(removeBookQuantity(books, numberOfBooks, wishedBook, wishedAuthor) == 0)
                 {
@@ -600,18 +607,20 @@ void searchBookByName(char bookName[50])
 
         if(found == 0)
         {
-            if(bookStock <= 0)
+            if(books[i].copiesAvailable <= 0)
             {
                 printf("The book is currently out of stock, try searching for another one.\n");
 
                 pressAnyKey();
                 openBookManagementPage();
+                return;
             }
 
-            foundBooks++;
             strcpy(wishedBook, books[i].bookName);
             strcpy(wishedAuthor, books[i].authorName);
             bookStock = books[i].copiesAvailable;
+
+            foundBooks++;
 
             printf("There is a book named '%s' written by '%s' available.\n",
                    books[i].bookName, books[i].authorName);
@@ -627,7 +636,15 @@ void searchBookByName(char bookName[50])
 
                 addNewLoanEntry(currentlyAuthStudentName, wishedBook, wishedAuthor);
 
-                removeBookQuantity(books, numberOfBooks, wishedBook, wishedAuthor);
+                updateLoans();
+                if(removeBookQuantity(books, numberOfBooks, wishedBook, wishedAuthor) == 0)
+                {
+                    openBookManagementPage();
+                }
+                else
+                {
+                    borrowBook();
+                }
             }
             else
             {
@@ -730,14 +747,23 @@ void returnBook()
     printf("Enter the book's author:\n");
     gets(authorName);
 
+    strcpy(wishedBook, bookName);
+    strcpy(wishedAuthor, authorName);
+
+    if(checkValidity(wishedBook, wishedAuthor) == 1)
+    {
+        errorMessage("You must introduce the name of the book AND the author's name!\n");
+        openBookManagementPage();
+        return;
+    }
     //We suppose we didn't find any matches so we initialize them with 1 (strcmp returns 0 on match)
     int foundUser = 1, foundBook = 1, foundAuthor = 1, returnedBook = 0;
 
     for(int i = 0; i < numberOfLoans; i++)
     {
         foundUser = strcmp(loans[i].borrowerName, currentlyAuthStudentName);
-        foundBook = strcmp(loans[i].bookName, bookName);
-        foundAuthor = strcmp(loans[i].authorName, authorName);
+        foundBook = strcmp(loans[i].bookName, wishedBook);
+        foundAuthor = strcmp(loans[i].authorName, wishedAuthor);
 
         if(foundUser == 0 && foundBook == foundUser && foundAuthor == foundUser && returnedBook == 0)
         {
@@ -752,6 +778,8 @@ void returnBook()
 
     if(returnedBook)
     {
+        findReturnedBook();
+
         FILE * fLoans = openFile(fLoansName, "w");
 
         for(int i = 0; i < numberOfLoans; i++)
@@ -788,4 +816,31 @@ void returnBook()
         pressAnyKey();
         openBookManagementPage();
     }
+}
+
+void findReturnedBook()
+{
+    for(int i = 0; i < numberOfBooks; i++)
+    {
+        int foundBook = strcmp(books[i].bookName, wishedBook);
+        int foundAuthor = strcmp(books[i].authorName, wishedAuthor);
+
+        if(foundBook == 0 && foundAuthor == 0)
+        {
+            books[i].copiesAvailable += 1;
+            break;
+        }
+    }
+
+    FILE * fBooks = openFile(fBooksName, "w");
+
+    for(int i = 0; i < numberOfBooks; i++)
+    {
+        fprintf(fBooks, bookWritingPattern, books[i].bookName,
+                books[i].authorName, books[i].copiesAvailable);
+    }
+
+    fclose(fBooks);
+
+    updateBookList();
 }

@@ -12,5 +12,4 @@ add_executable(LibrarySystem
         displayHandler.h
         fileHandler.c
         displayHandler.c
-        fileHandler.h
 )

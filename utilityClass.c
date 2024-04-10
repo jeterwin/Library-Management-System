@@ -44,10 +44,10 @@ int findBook(struct Book * books, int numberOfBooks, char wishedBook[], char boo
 
     for(int i = 0; i < numberOfBooks; i++)
     {
-        found = strcmp(books[i].bookName, wishedBook) != 0 && strcmp(books[i].authorName, bookAuthor) != 0;
-
-        if(found == 0)
+        found = strcmp(books[i].bookName, wishedBook) == 0 && strcmp(books[i].authorName, bookAuthor) == 0;
+        if(found == 1)
         {
+            printf("%s %s\n", wishedBook, bookAuthor);
             books[i].copiesAvailable -= 1;
             return 1;
         }
@@ -85,7 +85,6 @@ int removeBookQuantity(struct Book * books, int numberOfBooks, char wishedBook[]
 void addNewLoanEntry(char currentlyAuthStudentName[], char wishedBook[], char wishedAuthor[])
 {
     FILE * fLoans = openFile(fLoansName, "a+");
-
     fprintf(fLoans, loansWritingPattern, currentlyAuthStudentName, wishedBook, wishedAuthor);
     fclose(fLoans);
 }
@@ -111,6 +110,7 @@ void writeBooksToFile(struct Book * books, int numberOfBooks)
 
     for(int i = 0; i < numberOfBooks; i++)
     {
+        printf("%s %s %d \n\n", books[i].bookName, books[i].authorName, books[i].copiesAvailable);
         fprintf(fBooks, bookWritingPattern,
                 books[i].bookName, books[i].authorName, books[i].copiesAvailable);
     }
