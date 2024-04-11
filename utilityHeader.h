@@ -15,6 +15,9 @@ int removeBookQuantity(struct Book *, int, char[], char[]);
 
 //Loan functions
 
+int searchForLoan(int, struct Loans *, char [],
+                  char [], char []);
+
 //We are inserting a new entry in our text with loans for every book that is borrowed by each student
 void addNewLoanEntry(char [], char[], char []);
 

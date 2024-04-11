@@ -15,6 +15,29 @@ int checkValidity(char str1[], char str2[])
     return (strcmp(str1, "") == 0) || (strcmp(str2, "") == 0);
 }
 
+int searchForLoan(int numberOfLoans, struct Loans * loans, char currentlyAuthStudentName[],
+        char wishedBook[], char wishedAuthor[])
+{
+    int foundUser, foundBook, foundAuthor;
+    for(int i = 0; i < numberOfLoans; i++)
+    {
+        foundUser = strcmp(loans[i].borrowerName, currentlyAuthStudentName);
+        foundBook = strcmp(loans[i].bookName, wishedBook);
+        foundAuthor = strcmp(loans[i].authorName, wishedAuthor);
+
+        if(foundUser == 0 && foundBook == foundUser && foundAuthor == foundUser)
+        {
+            strcpy(loans[i].authorName, "");
+            strcpy(loans[i].borrowerName, "");
+            strcpy(loans[i].bookName, "");
+
+            printf("Successfully returned the book!\n");
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void displayAllBooksByAuthor(char authorName[], struct Book * books, int numberOfBooks)
 {
     printf("These are all the books available written by '%s' available in the library:\n\n", authorName);
@@ -163,6 +186,23 @@ int checkForDuplicates(struct Student * students, int numberOfStudents, char fir
     return 0;
 }
 
+void writeLoansToFile(int numberOfLoans, struct Loans * loans)
+{
+    FILE * fLoans = openFile(fLoansName, "w");
+
+    for(int i = 0; i < numberOfLoans; i++)
+    {
+        //We found the erased book
+        if(strcmp(loans[i].bookName, "") == 0)
+        {
+            continue;
+        }
+        fprintf(fLoans, loansWritingPattern, loans[i].borrowerName, loans[i].bookName,
+                loans[i].authorName);
+    }
+    fclose(fLoans);
+}
+
 int addUser(int numberOfStudents, struct Student * students)
 {
     char firstName[50], lastName[50];
@@ -183,7 +223,6 @@ int addUser(int numberOfStudents, struct Student * students)
         errorMessage("Found an user with the same name!\n");
         return -1;
     }
-    printf("hemlo");
     //If we didn't find a duplicate
     writeStudentToFile(firstName, lastName);
 

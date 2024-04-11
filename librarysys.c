@@ -23,7 +23,7 @@ void returnBook();
 void searchBookByName(char [50]);
 void searchBookByNameAndAuthor(char [50], char [50]);
 void updateBookList();
-void updateLoans();
+void updateLoansStruct();
 
 //User functions
 void updateStudentList();
@@ -32,6 +32,8 @@ void copyCurrentAuthStudent(char *, char *);
 void registerStudent();
 
 void findReturnedBook();
+
+int searchForLoan();
 
 static char *currentlyAuthStudentName; // A char to hold the logged in student name
 static int isLoggedIn = 0; // A bool for the current status of the student
@@ -90,7 +92,7 @@ void login()
         registerStudent();
 
         updateStudentList();
-        updateLoans();
+        updateLoansStruct();
         updateBookList();
 
         Sleep(2000);
@@ -106,7 +108,7 @@ void login()
     {
         updateStudentList();
         updateBookList();
-        updateLoans();
+        updateLoansStruct();
 
         displayLoggedIn();
         Sleep(2000);
@@ -196,7 +198,7 @@ void updateBookList()
     fclose(fBooks);
 }
 
-void updateLoans()
+void updateLoansStruct()
 {
     free(loans);
     numberOfLoans = 0;
@@ -259,7 +261,6 @@ void updateStudentList()
 void mainScreen()
 {
     resetScreen();
-
     displayMainPage();
 
     int choice = 0;
@@ -572,7 +573,7 @@ void searchBookByNameAndAuthor(char bookName[50], char authorName[50])
 
                 addNewLoanEntry(currentlyAuthStudentName, wishedBook, wishedAuthor);
 
-                updateLoans();
+                updateLoansStruct();
                 //There was an error or we don't want to borrow another book
                 if(removeBookQuantity(books, numberOfBooks, wishedBook, wishedAuthor) == 0)
                 {
@@ -636,7 +637,7 @@ void searchBookByName(char bookName[50])
 
                 addNewLoanEntry(currentlyAuthStudentName, wishedBook, wishedAuthor);
 
-                updateLoans();
+                updateLoansStruct();
                 if(removeBookQuantity(books, numberOfBooks, wishedBook, wishedAuthor) == 0)
                 {
                     openBookManagementPage();
@@ -679,9 +680,8 @@ void openUserManagementPage()
         case 1:
             resetScreen();
 
-            int result = addUser(numberOfStudents, students);
-            //We didn't add an user successfully
-            if(result == -1)
+            //We didn't add a user successfully
+            if(addUser(numberOfStudents, students) == -1)
             {
                 mainScreen();
             }
@@ -704,7 +704,6 @@ void openUserManagementPage()
 void openBookManagementPage()
 {
     resetScreen();
-
     displayBookManagementPage();
 
     int choice;
@@ -757,44 +756,11 @@ void returnBook()
         return;
     }
     //We suppose we didn't find any matches so we initialize them with 1 (strcmp returns 0 on match)
-    int foundUser = 1, foundBook = 1, foundAuthor = 1, returnedBook = 0;
-
-    for(int i = 0; i < numberOfLoans; i++)
-    {
-        foundUser = strcmp(loans[i].borrowerName, currentlyAuthStudentName);
-        foundBook = strcmp(loans[i].bookName, wishedBook);
-        foundAuthor = strcmp(loans[i].authorName, wishedAuthor);
-
-        if(foundUser == 0 && foundBook == foundUser && foundAuthor == foundUser && returnedBook == 0)
-        {
-            strcpy(loans[i].authorName, "");
-            strcpy(loans[i].borrowerName, "");
-            strcpy(loans[i].bookName, "");
-
-            printf("Successfully returned the book!\n");
-            returnedBook = 1;
-        }
-    }
-
-    if(returnedBook)
+    if(searchForLoan(numberOfLoans, loans, currentlyAuthStudentName, wishedBook, wishedAuthor))
     {
         findReturnedBook();
-
-        FILE * fLoans = openFile(fLoansName, "w");
-
-        for(int i = 0; i < numberOfLoans; i++)
-        {
-            //We found the erased book
-            if(strcmp(loans[i].bookName, "") == 0)
-            {
-                continue;
-            }
-            fprintf(fLoans, loansWritingPattern, loans[i].borrowerName, loans[i].bookName,
-                    loans[i].authorName);
-        }
-        fclose(fLoans);
-
-        updateLoans();
+        writeLoansToFile(numberOfLoans, loans);
+        updateLoansStruct();
 
         printf("Would you like to return another book? [Y/N]\n");
 
