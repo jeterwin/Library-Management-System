@@ -6,6 +6,8 @@
 //Library functions
 void displayAllBooksByAuthor(char authorName[], struct Book * books, int numberOfBooks);
 
+void displayAllBooks();
+
 int findBook(struct Book *, int, char[], char[]);
 
 void writeBooksToFile(struct Book *, int);

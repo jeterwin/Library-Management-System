@@ -297,97 +297,113 @@ void bookSearch()
     resetScreen();
 
     FILE * fBooks = openFile(fBooksName, "r");
-    int foundBooks = 0;
-    char bookName[50], authorName[50];
 
-    printf("Enter the name of the book you would like to search:\n");
-    gets(bookName);
+    printf("Would you like to:\n1.Search for a specific book.\n2.See what books are available"
+           " in the library.\n\n");
 
-    printf("Enter an author name:\n");
-    gets(authorName);
+    int choice;
+    scanf("%d", &choice);
 
-    fflush(stdin);
-
-    //We shall conduct searches based on book name or author name, or both. If the author name is
-    //empty, then we will only search a book by its name, if we are searching by book names
-    //then we shall get returned a list with all books written by that author.
-
-    //We provided a book name and author name
-    if(strcmp(authorName, "\0") != 0 && strcmp(bookName, "\0") != 0)
+    if(choice == 1)
     {
-        for(int i = 0; i <= numberOfBooks; i++)
-        {
-            int foundBookName = strcmp(books[i].bookName, bookName);
-            int foundAuthorName = strcmp(books[i].authorName, authorName);
-            if(foundBookName == 0 && foundAuthorName == 0)
-            {
-                foundBooks = 1;
-                books[i].copiesAvailable == 0 ?
-                printf("The book is out of stock, try searching for another one.\n") :
-                printf("The book is in stock, there are %d copies available.\n", books[i].copiesAvailable);
+        fflush(stdin);
 
-                break;
+        int foundBooks = 0;
+        char bookName[50], authorName[50];
+
+        printf("Enter the name of the book you would like to search:\n");
+        gets(bookName);
+
+        printf("Enter an author name:\n");
+        gets(authorName);
+
+        fflush(stdin);
+
+        //We shall conduct searches based on book name or author name, or both. If the author name is
+        //empty, then we will only search a book by its name, if we are searching by book names
+        //then we shall get returned a list with all books written by that author.
+
+        //We provided a book name and author name
+        if(strcmp(authorName, "\0") != 0 && strcmp(bookName, "\0") != 0)
+        {
+            for(int i = 0; i <= numberOfBooks; i++)
+            {
+                int foundBookName = strcmp(books[i].bookName, bookName);
+                int foundAuthorName = strcmp(books[i].authorName, authorName);
+                if(foundBookName == 0 && foundAuthorName == 0)
+                {
+                    foundBooks = 1;
+                    books[i].copiesAvailable == 0 ?
+                    printf("The book is out of stock, try searching for another one.\n") :
+                    printf("The book is in stock, there are %d copies available.\n", books[i].copiesAvailable);
+
+                    break;
+                }
+            }
+            //We didn't find any books
+            if(foundBooks == 0)
+            {
+                printf("There are no books named '%s' written by '%s' available in the library.\n",
+                       bookName, authorName);
             }
         }
-        //We didn't find any books
-        if(foundBooks == 0)
+            //We provided a book name
+        else if(strcmp(bookName, "\0") != 0)
         {
-            printf("There are no books named '%s' written by '%s' available in the library.\n",
-                   bookName, authorName);
-        }
-    }
-    //We provided a book name
-    else if(strcmp(bookName, "\0") != 0)
-    {
-        for(int i = 0; i <= numberOfBooks; i++)
-        {
-            int found = strcmp(books[i].bookName, bookName);
-            if(found == 0)
+            for(int i = 0; i <= numberOfBooks; i++)
             {
-                foundBooks = 1;
-                books[i].copiesAvailable == 0 ?
-                printf("The book is out of stock, try searching for another one.\n") :
-                printf("The book is in stock and it is written by"
-                       " '%s', there are %d copies available.\n",
-                       books[i].authorName, books[i].copiesAvailable);
+                int found = strcmp(books[i].bookName, bookName);
+                if(found == 0)
+                {
+                    foundBooks = 1;
+                    books[i].copiesAvailable == 0 ?
+                    printf("The book is out of stock, try searching for another one.\n") :
+                    printf("The book is in stock and it is written by"
+                           " '%s', there are %d copies available.\n",
+                           books[i].authorName, books[i].copiesAvailable);
 
-                break;
+                    break;
+                }
             }
-        }
 
-        if(foundBooks == 0)
-        {
-            printf("There are no books named '%s' available in the library.\n", bookName);
-        }
-
-    }
-        //We provided an author name
-    else if(strcmp(authorName, "\0") != 0)
-    {
-        printf("These are all the books available written by '%s':\n\n", authorName);
-
-        for(int i = 0; i <= numberOfBooks; i++)
-        {
-            int found = strcmp(authorName, books[i].authorName);
-
-            if(found == 0)
+            if(foundBooks == 0)
             {
-                foundBooks++;
-                printf("Book Name: %s\n", books[i].bookName);
+                printf("There are no books named '%s' available in the library.\n", bookName);
             }
-        }
 
-        if(foundBooks != 0)
+        }
+            //We provided an author name
+        else if(strcmp(authorName, "\0") != 0)
         {
-            printf("\nWrite down the book you're interested in and go borrow it!\n");
-        }
+            printf("These are all the books available written by '%s':\n\n", authorName);
 
+            for(int i = 0; i <= numberOfBooks; i++)
+            {
+                int found = strcmp(authorName, books[i].authorName);
+
+                if(found == 0)
+                {
+                    foundBooks++;
+                    printf("Book Name: %s\n", books[i].bookName);
+                }
+            }
+
+            if(foundBooks != 0)
+            {
+                printf("\nWrite down the book you're interested in and go borrow it!\n");
+            }
+
+        }
+        else
+        {
+            errorMessage("You should at least provide a book name or an author name!");
+        }
+        fclose(fBooks);
     }
     else
     {
-        errorMessage("You should at least provide a book name or an author name!");
+        displayAllBooks(numberOfBooks, books);
     }
-    fclose(fBooks);
 
     pressAnyKey();
     openBookManagementPage();

@@ -61,6 +61,27 @@ void displayAllBooksByAuthor(char authorName[], struct Book * books, int numberO
     }
 }
 
+void displayAllBooks(int numberOfBooks, const struct Book* books)
+{
+    printf("These are all the books available in the library!\n\n");
+    printf("/////////////////////////////////////////////////\n");
+    printf("////Author name, Title name, copies available////\n");
+    printf("/////////////////////////////////////////////////\n\n");
+    int foundBooks = 0;
+    for(int i = 0; i < numberOfBooks; i++)
+    {
+        foundBooks++;
+
+        printf("%d. %s, %s, %d\n\n", i, books[i].authorName, books[i].bookName,
+               books[i].copiesAvailable);
+    }
+
+    if(foundBooks == 0)
+    {
+        printf("Looks like the library is empty, try donating some books!\n");
+    }
+}
+
 int findBook(struct Book * books, int numberOfBooks, char wishedBook[], char bookAuthor[])
 {
     int found;
