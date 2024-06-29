@@ -10,6 +10,7 @@ add_executable(LibrarySystem
         loansStruct.h
         displayHandler.h
         displayHandler.h
-        fileHandler.c
-        displayHandler.c
+        utilityHeader.h
+        bookHandler.h
+        userHandler.h
 )
