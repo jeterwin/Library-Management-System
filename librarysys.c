@@ -47,6 +47,7 @@ void login(int argc, char *argv[])
         strcpy(studentName, firstName);
         strcat(studentName, lastName);
 
+        currentlyAuthStudentName = malloc(sizeof(firstName) + sizeof(lastName) + 1);
         copyCurrentAuthStudent(firstName, lastName, currentlyAuthStudentName);
     }
     else
@@ -78,8 +79,9 @@ void login(int argc, char *argv[])
 
         strcpy(studentName, firstName);
         strcat(studentName, lastName);
+        printf("%s %s", firstName, lastName);
 
-
+        currentlyAuthStudentName = malloc(sizeof(firstName) + sizeof(lastName) + 1);
         copyCurrentAuthStudent(firstName, lastName, currentlyAuthStudentName);
     }
 

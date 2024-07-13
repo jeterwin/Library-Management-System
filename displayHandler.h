@@ -138,6 +138,7 @@ void showLoanedBooks(char * currentlyAuthStudentName)
     }
 
     pressAnyKey();
+
 }
 
 #endif //LIBRARYSYSTEM_DISPLAYHANDLER_H

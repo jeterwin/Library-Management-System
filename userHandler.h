@@ -22,7 +22,10 @@ void copyCurrentAuthStudent(char *firstName, char *lastName, char * currentlyAut
     //We assign the last position + 1 of our first name the null terminator then change
     //the value of the last position to an empty space, allowing us to concatenate the
     //last name on top of the first name
-    free(currentlyAuthStudentName);
+    if(currentlyAuthStudentName != NULL)
+    {
+        free(currentlyAuthStudentName);
+    }
 
     currentlyAuthStudentName = malloc(sizeof(firstName) + sizeof(lastName) + 1);
     strcpy(currentlyAuthStudentName, firstName);
