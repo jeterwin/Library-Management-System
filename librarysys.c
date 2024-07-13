@@ -33,7 +33,7 @@ void login(int argc, char *argv[])
 {
     resetScreen();
     welcomeUser();
-
+    
     char studentName[50], firstName[50], lastName[50];
     char wordSeparator[] = " ";
     char *words[3];
@@ -112,7 +112,7 @@ void login(int argc, char *argv[])
     }
     else
     {
-        noUserFoundMessage(currentlyAuthStudentName);
+        noUserFoundMessage();
 
         pressAnyKey();
         login(argc, argv);

@@ -5,7 +5,7 @@ void welcomeUser();
 
 void displayMainPage();
 
-void noUserFoundMessage(char * studentName);
+void noUserFoundMessage();
 
 void pressAnyKey();
 
@@ -50,9 +50,9 @@ void displayMainPage()
     printf("> 3. Quit App\n");
 }
 
-void noUserFoundMessage(char * studentName)
+void noUserFoundMessage()
 {
-    printf("There is no user with the name '%s' found in the database, try again.", studentName);
+    printf("There is no user with that name found in the database, try again.");
 }
 
 void pressAnyKey()
